@@ -90,4 +90,71 @@ it("ouvre le détail d'une transaction depuis la liste", () => {
     .should("be.visible")
 })
 
+it("filtre les transactions reçues et vérifie que les montants sont positifs", () => {
+  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
+    const nombreAvantFiltre = $transactionsAvant.length
+
+    cy.get('[data-testid="transaction-filter-type"]')
+      .select("received")
+
+    cy.get('[data-testid^="transaction-item-"]')
+      .should("have.length.lessThan", nombreAvantFiltre)
+
+    cy.get('[data-testid^="transaction-amount-"]')
+      .each(($amount) => {
+        cy.wrap($amount).should("contain", "+")
+      })
+  })
+})
+
+it("réduit la liste quand on recherche un terme présent", () => {
+  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
+    const nombreAvantRecherche = $transactionsAvant.length
+
+    cy.get('[data-testid="transaction-search"]')
+      .type("Jane")
+
+    cy.get('[data-testid^="transaction-item-"]')
+      .should("have.length.greaterThan", 0)
+      .and("have.length.lessThan", nombreAvantRecherche)
+  })
+})
+
+it("retrouve toutes les transactions après réinitialisation des filtres", () => {
+  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
+    const nombreAvantFiltre = $transactionsAvant.length
+
+    cy.get('[data-testid="transaction-filter-type"]')
+      .select("sent")
+
+    cy.get('[data-testid^="transaction-item-"]')
+      .should("have.length.lessThan", nombreAvantFiltre)
+
+    cy.get('[data-testid="transaction-reset-filters"]')
+      .click()
+
+    cy.get('[data-testid^="transaction-item-"]')
+      .should("have.length", nombreAvantFiltre)
+  })
+})
+
+it("filtre les transactions en attente ou affiche un état vide", () => {
+  cy.get('[data-testid="transaction-filter-status"]')
+    .select("pending")
+
+  cy.get("body").then(($body) => {
+    if ($body.find('[data-testid="transaction-empty-state"]').length > 0) {
+      cy.get('[data-testid="transaction-empty-state"]')
+        .should("be.visible")
+        .and("contain", "Aucune transaction trouvée")
+    } else {
+      cy.get('[data-testid^="transaction-item-"]')
+        .should("have.length.greaterThan", 0)
+
+      cy.contains("En attente")
+        .should("be.visible")
+    }
+  })
+})
+
 })
