@@ -2,8 +2,12 @@ import beneficiairesPage from "../../pages/BeneficiairesPage";
 
 describe("Bénéficiaires - ZotoBank", () => {
 
-  beforeEach(() => {
-    cy.login("johndoe", "s3cret");
+  beforeEach(function () {
+    cy.fixture("users").as("user");
+  });
+
+  beforeEach(function () {
+    cy.login(this.user.username, this.user.password);
     beneficiairesPage.visit();
   });
 
@@ -49,7 +53,6 @@ describe("Bénéficiaires - ZotoBank", () => {
 
       beneficiairesPage.labels()
         .should("have.length", nombreAvant);
-
     });
 
   });
