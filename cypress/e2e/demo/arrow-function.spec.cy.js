@@ -1,11 +1,12 @@
-describe("Connexion réussie - ZotoBank", () => {
+describe("Piège des arrow functions", () => {
 
   beforeEach(function () {
     cy.fixture("users").as("user");
-    cy.visit("/login");
   });
 
-  it("redirige vers /dashboard après une connexion réussie", function () {
+  it("fonctionne avec une fonction classique", function () {
+
+    cy.visit("/login");
 
     cy.get('[data-testid="signin-username"]')
       .type(this.user.username);

@@ -1,8 +1,13 @@
 import transactionsPage from "../../pages/TransactionsPage";
 
 describe("Transactions - ZotoBank", () => {
-  beforeEach(() => {
-    cy.login("johndoe", "s3cret");
+
+  beforeEach(function () {
+    cy.fixture("users").as("user");
+  });
+
+  beforeEach(function () {
+    cy.login(this.user.username, this.user.password);
     transactionsPage.visit();
   });
 
@@ -137,4 +142,5 @@ describe("Transactions - ZotoBank", () => {
       }
     });
   });
+
 });

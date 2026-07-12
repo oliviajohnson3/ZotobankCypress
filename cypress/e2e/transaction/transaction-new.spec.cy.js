@@ -1,7 +1,11 @@
 describe("Nouvelle transaction - ZotoBank", () => {
-  beforeEach(() => {
-    cy.login("johndoe", "s3cret");
 
+  beforeEach(function () {
+    cy.fixture("users").as("user");
+  });
+
+  beforeEach(function () {
+    cy.login(this.user.username, this.user.password);
     cy.visit("/transactions/new");
   });
 
@@ -72,4 +76,5 @@ describe("Nouvelle transaction - ZotoBank", () => {
     cy.get('[data-testid="new-transaction-success"]')
       .should("not.exist");
   });
+
 });
