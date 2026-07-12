@@ -1,160 +1,140 @@
+import transactionsPage from "../../pages/TransactionsPage";
+
 describe("Transactions - ZotoBank", () => {
-
   beforeEach(() => {
-    cy.visit("/login")
-
-    cy.get('[data-testid="signin-username"]').type("johndoe")
-    cy.get('[data-testid="signin-password"]').type("s3cret")
-    cy.get('[data-testid="signin-submit"]').click()
-
-    cy.url().should("include", "/dashboard")
-
-    cy.visit("/transactions")
-  })
+    cy.login("johndoe", "s3cret");
+    transactionsPage.visit();
+  });
 
   it("affiche la liste des transactions après connexion", () => {
-    cy.url().should("include", "/transactions")
+    cy.url().should("include", "/transactions");
 
-    cy.get('[data-testid="transaction-list"]')
-      .should("be.visible")
+    transactionsPage.list()
+      .should("be.visible");
 
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length.greaterThan", 0)
-  })
+    transactionsPage.items()
+      .should("have.length.greaterThan", 0);
+  });
 
   it("affiche un état vide quand la recherche ne donne aucun résultat", () => {
-    cy.get('[data-testid="transaction-search"]').type("toto")
+    transactionsPage.search("toto");
 
-    cy.get('[data-testid="transaction-empty-state"]')
+    transactionsPage.emptyState()
       .should("be.visible")
-      .and("contain", "Aucune transaction trouvée")
+      .and("contain", "Aucune transaction trouvée");
 
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length", 0)
-  })
+    transactionsPage.items()
+      .should("have.length", 0);
+  });
 
   it("filtre les transactions envoyées puis réinitialise la liste", () => {
+    transactionsPage.items().then(($transactionsAvant) => {
+      const nombreAvantFiltre = $transactionsAvant.length;
 
-    cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
+      transactionsPage.filterByType("sent");
 
-      const nombreAvantFiltre = $transactionsAvant.length
+      transactionsPage.items()
+        .should("have.length.lessThan", nombreAvantFiltre);
 
-      cy.get('[data-testid="transaction-filter-type"]')
-        .select("sent")
-
-      cy.get('[data-testid^="transaction-item-"]')
-        .should("have.length.lessThan", nombreAvantFiltre)
-
-      cy.get('[data-testid^="transaction-amount-"]')
+      transactionsPage.amounts()
         .first()
-        .should("contain", "-")
+        .should("contain", "-");
 
-      cy.get('[data-testid="transaction-reset-filters"]')
-        .click()
+      transactionsPage.reset();
 
-      cy.get('[data-testid^="transaction-item-"]')
-        .should("have.length", nombreAvantFiltre)
+      transactionsPage.items()
+        .should("have.length", nombreAvantFiltre);
+    });
+  });
 
-    })
-  })
   it("affiche un état vide quand on combine le filtre envoyés et une recherche sans résultat", () => {
-  cy.get('[data-testid="transaction-filter-type"]')
-    .select("sent")
+    transactionsPage.filterByType("sent");
+    transactionsPage.search("toto");
 
-  cy.get('[data-testid="transaction-search"]')
-    .type("toto")
+    transactionsPage.emptyState()
+      .should("be.visible")
+      .and("contain", "Aucune transaction trouvée");
 
-  cy.get('[data-testid="transaction-empty-state"]')
-    .should("be.visible")
-    .and("contain", "Aucune transaction trouvée")
+    transactionsPage.items()
+      .should("have.length", 0);
+  });
 
-  cy.get('[data-testid^="transaction-item-"]')
-    .should("have.length", 0)
-})
+  it("ouvre le détail d'une transaction depuis la liste", () => {
+    transactionsPage.firstItem()
+      .click();
 
-it("ouvre le détail d'une transaction depuis la liste", () => {
-  cy.get('[data-testid^="transaction-item-"]')
-    .first()
-    .click()
+    transactionsPage.detail()
+      .should("be.visible");
 
-  cy.get('[data-testid="transaction-detail"]')
-    .should("be.visible")
+    transactionsPage.detailAmount()
+      .should("be.visible");
 
-  cy.get('[data-testid="transaction-detail-amount"]')
-    .should("be.visible")
+    transactionsPage.detailSender()
+      .should("be.visible");
 
-  cy.get('[data-testid="transaction-detail-sender"]')
-    .should("be.visible")
+    transactionsPage.detailStatus()
+      .should("be.visible");
+  });
 
-  cy.get('[data-testid="transaction-detail-status"]')
-    .should("be.visible")
-})
+  it("filtre les transactions reçues et vérifie que les montants sont positifs", () => {
+    transactionsPage.items().then(($transactionsAvant) => {
+      const nombreAvantFiltre = $transactionsAvant.length;
 
-it("filtre les transactions reçues et vérifie que les montants sont positifs", () => {
-  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
-    const nombreAvantFiltre = $transactionsAvant.length
+      transactionsPage.filterByType("received");
 
-    cy.get('[data-testid="transaction-filter-type"]')
-      .select("received")
+      transactionsPage.items()
+        .should("have.length.lessThan", nombreAvantFiltre);
 
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length.lessThan", nombreAvantFiltre)
+      transactionsPage.amounts()
+        .each(($amount) => {
+          cy.wrap($amount).should("contain", "+");
+        });
+    });
+  });
 
-    cy.get('[data-testid^="transaction-amount-"]')
-      .each(($amount) => {
-        cy.wrap($amount).should("contain", "+")
-      })
-  })
-})
+  it("réduit la liste quand on recherche un terme présent", () => {
+    transactionsPage.items().then(($transactionsAvant) => {
+      const nombreAvantRecherche = $transactionsAvant.length;
 
-it("réduit la liste quand on recherche un terme présent", () => {
-  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
-    const nombreAvantRecherche = $transactionsAvant.length
+      transactionsPage.search("Jane");
 
-    cy.get('[data-testid="transaction-search"]')
-      .type("Jane")
-
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length.greaterThan", 0)
-      .and("have.length.lessThan", nombreAvantRecherche)
-  })
-})
-
-it("retrouve toutes les transactions après réinitialisation des filtres", () => {
-  cy.get('[data-testid^="transaction-item-"]').then(($transactionsAvant) => {
-    const nombreAvantFiltre = $transactionsAvant.length
-
-    cy.get('[data-testid="transaction-filter-type"]')
-      .select("sent")
-
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length.lessThan", nombreAvantFiltre)
-
-    cy.get('[data-testid="transaction-reset-filters"]')
-      .click()
-
-    cy.get('[data-testid^="transaction-item-"]')
-      .should("have.length", nombreAvantFiltre)
-  })
-})
-
-it("filtre les transactions en attente ou affiche un état vide", () => {
-  cy.get('[data-testid="transaction-filter-status"]')
-    .select("pending")
-
-  cy.get("body").then(($body) => {
-    if ($body.find('[data-testid="transaction-empty-state"]').length > 0) {
-      cy.get('[data-testid="transaction-empty-state"]')
-        .should("be.visible")
-        .and("contain", "Aucune transaction trouvée")
-    } else {
-      cy.get('[data-testid^="transaction-item-"]')
+      transactionsPage.items()
         .should("have.length.greaterThan", 0)
+        .and("have.length.lessThan", nombreAvantRecherche);
+    });
+  });
 
-      cy.contains("En attente")
-        .should("be.visible")
-    }
-  })
-})
+  it("retrouve toutes les transactions après réinitialisation des filtres", () => {
+    transactionsPage.items().then(($transactionsAvant) => {
+      const nombreAvantFiltre = $transactionsAvant.length;
 
-})
+      transactionsPage.filterByType("sent");
+
+      transactionsPage.items()
+        .should("have.length.lessThan", nombreAvantFiltre);
+
+      transactionsPage.reset();
+
+      transactionsPage.items()
+        .should("have.length", nombreAvantFiltre);
+    });
+  });
+
+  it("filtre les transactions en attente ou affiche un état vide", () => {
+    transactionsPage.filterByStatus("pending");
+
+    transactionsPage.hasEmptyState().then((etatVidePresent) => {
+      if (etatVidePresent) {
+        transactionsPage.emptyState()
+          .should("be.visible")
+          .and("contain", "Aucune transaction trouvée");
+      } else {
+        transactionsPage.items()
+          .should("have.length.greaterThan", 0);
+
+        transactionsPage.pendingStatus()
+          .should("be.visible");
+      }
+    });
+  });
+});
