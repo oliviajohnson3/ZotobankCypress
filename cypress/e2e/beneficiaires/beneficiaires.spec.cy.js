@@ -12,6 +12,12 @@ describe("Bénéficiaires - ZotoBank", () => {
   });
 
   it("affiche la page et contient au moins un bénéficiaire", () => {
+    cy.allure()
+    .tag("smoke", "beneficiaires")
+    .severity("critical").epic("Bénéficiaires")
+    .story("Affichage de la page bénéficiaires")
+    .description("Vérifie que la page des bénéficiaires est accessible et contient au moins un bénéficiaire");
+    
     cy.url().should("include", "/beneficiaries");
 
     beneficiairesPage.addButton()
@@ -23,6 +29,11 @@ describe("Bénéficiaires - ZotoBank", () => {
   });
 
   it("ouvre le formulaire d'ajout d'un bénéficiaire", () => {
+    cy.allure()
+      .tag("regression", "beneficiaires")
+      .severity("normal").epic("Bénéficiaires")
+      .story("Ajout d'un bénéficiaire")
+      .description("Vérifie que le formulaire d'ajout de bénéficiaire peut être ouvert");
     beneficiairesPage.openAddForm();
 
     beneficiairesPage.usernameInput()
@@ -36,6 +47,11 @@ describe("Bénéficiaires - ZotoBank", () => {
   });
 
   it("affiche une erreur pour un nom d'utilisateur inexistant", () => {
+    cy.allure()
+      .tag("regression", "beneficiaires")
+      .severity("critical").epic("Bénéficiaires")
+      .story("Validation du formulaire d'ajout de bénéficiaire")
+      .description("Vérifie que l'erreur est affichée pour un utilisateur inexistant");
 
     beneficiairesPage.labels().then(($beneficiairesAvant) => {
       const nombreAvant = $beneficiairesAvant.length;
