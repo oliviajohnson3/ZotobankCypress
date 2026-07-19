@@ -46,3 +46,11 @@ jobs:
           name: allure-report
           path: allure-report
           retention-days: 7
+
+      - name: Déployer le rapport Allure sur GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./allure-report
+          publish_branch: gh-pages
