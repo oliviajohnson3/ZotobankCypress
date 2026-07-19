@@ -1,27 +1,44 @@
 name: Cypress Tests
+
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
+
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Récupérer le projet
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Vérifier que ZotoBank est accessible
+        run: |
+          curl --fail \
+            --retry 5 \
+            --retry-delay 10 \
+            --retry-all-errors \
+            https://zotobank.zotomatise.com/
+
       - name: Run Cypress + résultats Allure
         uses: cypress-io/github-action@v6
         with:
-          config: baseUrl=https://zotobank.zotomatise.com
+          config: baseUrl=https://zotobank.zotomatise.com/
         env:
           CYPRESS_allure: true
           CYPRESS_allureResultsPath: allure-results
+
       - name: Générer le rapport Allure
         if: always()
         run: npx allure generate allure-results --clean -o allure-report
+
       - name: Publier en artefact
         if: always()
         uses: actions/upload-artifact@v4
